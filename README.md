@@ -58,6 +58,10 @@ After logging in, mint NFTs by running:
 
 npm run mint 0xf8d6e0586b0a20c7
 
+# Burn NFTs
+
+npm burn mint <NFT id>
+
 # View NFTs
 
 Log in with account 0xf8d6e0586b0a20c7 and click "Get NFTs" in the app.

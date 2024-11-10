@@ -60,7 +60,8 @@ npm run mint 0xf8d6e0586b0a20c7
 
 # Burn NFTs
 
-npm burn mint <NFT id>
+npm run burn <NFTid>
+
 
 # View NFTs
 

@@ -268,6 +268,7 @@ export default function Home() {
         });
 
         console.log('Transaction Id', transactionId);
+        window.location.reload()
     } catch (error) {
         console.error('Error listing NFT for sale:', error);
     }

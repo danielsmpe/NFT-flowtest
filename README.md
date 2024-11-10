@@ -13,7 +13,6 @@ This project is a simple web application that allows users to mint, view, list f
 
 Ensure the following are installed on your system:
 
-- Node.js
 - Flow CLI
 - npm
 
@@ -28,16 +27,16 @@ Ensure the following are installed on your system:
    ```bash
    npm install
    ```
-2. **In the first terminal window, run:**
+3. **In the first terminal window, run:**
    ```bash
    npm run dev
    This will start the web app at http://localhost:3000.
    ```
-3. **In a second terminal window, run:**
+4. **In a second terminal window, run:**
    ```bash
    flow emulator start -v
    ```
-4. **Deploy the Contract and Start the Wallet**
+5. **Deploy the Contract and Start the Wallet**
    ```bash
    flow project deploy
    flow dev-wallet

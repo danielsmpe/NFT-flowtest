@@ -131,6 +131,8 @@ export default function Home() {
                     // Get the sale price of the listing
                     let price = self.listing.getDetails().salePrice
 
+                   
+
                     // Withdraw the required amount from the buyer's vault
                     let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
                         ?? panic("Cannot borrow ExampleToken vault from buyer's storage")

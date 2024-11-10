@@ -21,72 +21,55 @@ Ensure the following are installed on your system:
 
 1. **Clone the Repository**
    ```bash
-   git clone <repository-url>
-   cd 1-non-fungible-token
-   Install Dependencies
+   git clone https://github.com/danielsmpe/NFT-flowtest.git
+   cd NFT-flowtest
+   ```
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+2. **In the first terminal window, run:**
+   ```bash
+   npm run dev
+   This will start the web app at http://localhost:3000.
+   ```
+3. **In a second terminal window, run:**
+   ```bash
+   flow emulator start -v
+   ```
+4. **Deploy the Contract and Start the Wallet**
+   ```bash
+   flow project deploy
+   flow dev-wallet
    ```
 
-bash
-Copy code
-npm install
-Start the Frontend
-
-In the first terminal window, run:
-
-bash
-Copy code
-npm run dev
-This will start the web app at http://localhost:3000.
-
-Start the Local Emulator
-
-In a second terminal window, run:
-
-bash
-Copy code
-cd 1-non-fungible-token
-flow emulator start -v
-Deploy the Contract and Start the Wallet
-
-In a third terminal window, run:
-
-bash
-Copy code
-cd 1-non-fungible-token
-flow project deploy
-flow dev-wallet
-To redeploy after making changes to the contract, run:
-
-bash
-Copy code
-flow project deploy --update
-Open the App
+## Open the App
 
 Visit http://localhost:3000 in your browser.
 
-Usage Instructions
-Log In
+## Usage Instructions
 
-Click the "Log In" button on the app. A window with several Flow test accounts will appear. Select the first account to log in.
+# Log In
 
-Mint NFTs
+Click the "Log In" button on the app. A window with several Flow-dev accounts will appear. Select the first account to log in.
+
+# Mint NFTs
 
 After logging in, mint NFTs by running:
 
-bash
-Copy code
 npm run mint 0xf8d6e0586b0a20c7
-View NFTs
+
+# View NFTs
 
 Log in with account 0xf8d6e0586b0a20c7 and click "Get NFTs" in the app.
 
-Sell an NFT
+# Sell an NFT
 
 Select an NFT and click "Add to Listing" to list it for sale.
 
-Buy an NFT
+# Buy an NFT
 
 To buy a listed NFT, browse the marketplace, select an NFT, and click "Buy".
 
 Notes
-Make sure the Flow emulator and dev wallet are running before interacting with the app. Use the -v flag on the emulator for detailed transaction logs.
+Make sure the Flow emulator and dev wallet are running before interacting with the app.

@@ -17,10 +17,10 @@ async function mintNFTs(recipient) {
   try {
     const transactionId = await fcl.mutate({
       cadence: `
-        import NonFungibleToken from 0xDeployer
-        import ExampleNFT from 0xStandard
-        import MetadataViews from 0xStandard
-        import FungibleToken from 0xStandard
+        import NonFungibleToken from 0xNft
+        import ExampleNFT from 0xDeployer
+        import MetadataViews from 0xNft
+        import FungibleToken from 0xFt
 
         transaction(
           recipient: Address,

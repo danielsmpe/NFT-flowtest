@@ -86,6 +86,16 @@
 				"testnet": "294e44e1ec6993c6"
 			}
 		},
+		"FlowToken": {
+			"source": "./flow/cadence/utility/FlowToken.cdc",
+			"aliases": {
+				"emulator": "0ae53cb6e3f42a79",
+				"mainnet": "f233dcee88fe0abe",
+				"previewnet": "a0225e7000ac82a9",
+				"testing": "0000000000000003",
+				"testnet": "7e60df042a9c0868"
+			}
+		},
 		"FungibleToken": {
 			"source": "./flow/cadence/utility/FungibleToken.cdc",
 			"aliases": {
@@ -214,16 +224,6 @@
 			"address": "f8d6e0586b0a20c7",
 			"key": "cdb3410ae829f5e2a29f71f53efbce66bde1187948d6317de6918d5003576ca7"
 		},
-		"testnet-account": {
-		"address": "0x744aca42518a0239",
-		"key": {
-		"type": "hex",
-		"index": 0,
-		"signatureAlgorithm": "ECDSA_P256",
-		"hashAlgorithm": "SHA3_256",
-		"privateKey": "49346a53d07a6d57cc665f38afe3d1578943da83299568aa2ab7766aafb26780"
-		}
-	},
 		"mainnet-storefront": {
 			"address": "4eb8a10cb9f87357",
 			"key": {
@@ -236,6 +236,14 @@
 		"niel": {
 			"address": "f3fcd2c1a78f5eee",
 			"key": "c458b18d8effe7ef41cfee9f35c988e4b5c3771f57200c38b59e1ae63ef954af"
+		},
+		"test": {
+			"address": "179b6b1cb6755e31",
+			"key": "c0bb3432e00a0326e0f8e542f3ced1e87d0b9dce918f94ba448a2c11d6f6330b"
+		},
+		"testnet-account": {
+			"address": "dfdbb6d33410b860",
+			"key": "d26cc9252b48cbf98adbf0e187934f7c7512c471781f3f888eaa8f88a1bcd9f8"
 		}
 	},
 	"deployments": {
@@ -243,10 +251,15 @@
 			"emulator-account": [
 				"FungibleTokenMetadataViews",
 				"FungibleToken",
-				"ExampleNFT",
 				"ExampleToken",
-				"NFTStorefront",
+				"ExampleNFT",
 				"NFTStorefrontV2"
+			]
+		},
+		"mainnet": {
+			"mainnet-storefront": [
+				"NFTStorefrontV2",
+				"NFTStorefront"
 			]
 		},
 		"testnet": {
@@ -254,15 +267,8 @@
 				"FungibleTokenMetadataViews",
 				"FungibleToken",
 				"ExampleNFT",
-				"ExampleToken",
 				"NFTStorefront",
 				"NFTStorefrontV2"
-			]
-	},
-		"mainnet": {
-			"mainnet-storefront": [
-				"NFTStorefrontV2",
-				"NFTStorefront"
 			]
 		}
 	}

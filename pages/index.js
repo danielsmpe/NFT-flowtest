@@ -28,13 +28,28 @@ export default function Home() {
     setList([]);
   }, [user])
 
+  async function addStorefrontAddress(newAddress) {
+    const response = await fetch('/api/marketstore', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ address: newAddress }),
+    });
+  
+    const result = await response.json();
+    console.log(result.message);
+  }
 
   async function setupExampleTokenVault() {
     try {
       const transactionId = await fcl.mutate({
         cadence: `
           import ExampleToken from 0xDeployer
-          import FungibleToken from 0xee82856bf20e2aa6
+          import ExampleNFT from 0xDeployer
+          import FungibleToken from 0xFt
+          import NonFungibleToken from 0xNft
+          import MetadataViews from 0xNft
 
           transaction {
             prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
@@ -43,6 +58,18 @@ export default function Home() {
                     // Create and store the ExampleToken vault
                     let vault <- ExampleToken.createEmptyVault(vaultType: Type<@ExampleToken.Vault>())
                     acct.storage.save(<-vault, to: /storage/exampleTokenVault)
+
+                    let receiver = acct.capabilities.storage.issue<&{FungibleToken.Receiver}>(/storage/exampleTokenVault)
+                    acct.capabilities.publish(receiver, at: /public/exampleTokenReceiver)
+                }
+                if acct.storage.borrow<&ExampleNFT.Collection>(from: ExampleNFT.CollectionStoragePath) == nil {
+                  // Create a Collection resource and save it to storage
+                  let collection <- ExampleNFT.createEmptyCollection(nftType: Type<@ExampleNFT.NFT>())
+                  acct.storage.save(<-collection, to: ExampleNFT.CollectionStoragePath)
+
+                  // create a public capability for the collection
+                  let collectionCap = acct.capabilities.storage.issue<&ExampleNFT.Collection>(ExampleNFT.CollectionStoragePath)
+                  acct.capabilities.publish(collectionCap, at: ExampleNFT.CollectionPublicPath)
                 }
             }
         }
@@ -56,30 +83,6 @@ export default function Home() {
       console.log('Vault setup transaction ID:', transactionId);
     } catch (error) {
       console.error('Error setting up ExampleToken vault:', error);
-    }
-  }
-
-  async function getListingDetails(account, listingResourceID) {
-    try {
-      const result = await fcl.query({
-        cadence: `
-          import NFTStorefrontV2 from 0xDeployer
-  
-          access(all) fun main(account: Address, listingResourceID: UInt64): NFTStorefrontV2.ListingDetails {
-              let storefrontRef = getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
-                      NFTStorefrontV2.StorefrontPublicPath
-                  ) ?? panic("Could not borrow public storefront from address")
-              let listing = storefrontRef.borrowListing(listingResourceID: listingResourceID)
-                  ?? panic("No listing with that ID")
-              
-              return listing.getDetails()
-          }
-        `,
-        args: (arg, t) => [arg(account, t.Address), arg(listingResourceID, t.UInt64)]
-      });
-      return result;
-    } catch (error) {
-      console.error('Error fetching listing details:', error);
     }
   }
   
@@ -191,9 +194,7 @@ export default function Home() {
   }
 
   async function buyNFT(listingResourceID, storefrontAddress) {
-    console.log("Listing Resource ID to Buy:", listingResourceID);
-    console.log("Listing Resource ID to Buy:", listingResourceID);
-    const commissionRecipient = "0xf8d6e0586b0a20c7"
+    const commissionRecipient = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
 
     try {
         const transactionId = await fcl.mutate({
@@ -203,66 +204,78 @@ export default function Home() {
             import ExampleToken from 0xStandard
             import NonFungibleToken from 0xStandard
             import NFTStorefrontV2 from 0xDeployer
-            import FungibleToken from 0xee82856bf20e2aa6
+            import FungibleToken from 0xFt
 
            transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
 
-          let paymentVault: @{FungibleToken.Vault}
-          let exampleNFTReceiver: &{NonFungibleToken.Receiver}
-          let storefront: &{NFTStorefrontV2.StorefrontPublic}
-          let listing: &{NFTStorefrontV2.ListingPublic}
-          var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
+            let paymentVault: @{FungibleToken.Vault}
+            let exampleNFTReceiver: &{NonFungibleToken.Receiver}
+            let storefront: &{NFTStorefrontV2.StorefrontPublic}
+            let listing: &{NFTStorefrontV2.ListingPublic}
+            var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
 
-          prepare(acct: auth(BorrowValue) &Account) {
-              self.commissionRecipientCap = nil
-              // Access the storefront public resource of the seller to purchase the listing.
-              self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
-                      NFTStorefrontV2.StorefrontPublicPath
-                  ) ?? panic("Could not borrow Storefront from provided address")
+            prepare(acct: auth(BorrowValue) &Account) {
+                self.commissionRecipientCap = nil
+                // Access the storefront public resource of the seller to purchase the listing.
+                self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
+                        NFTStorefrontV2.StorefrontPublicPath
+                    ) ?? panic("Could not borrow Storefront from provided address")
 
-              // Borrow the listing
-              self.listing = self.storefront.borrowListing(listingResourceID: listingResourceID)
-                  ?? panic("No Offer with that ID in Storefront")
-              let price = self.listing.getDetails().salePrice
+                // Borrow the listing
+                self.listing = self.storefront.borrowListing(listingResourceID: listingResourceID)
+                    ?? panic("No Offer with that ID in Storefront")
+                let price = self.listing.getDetails().salePrice
 
-              // Access the vault of the buyer to pay the sale price of the listing.
-              let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
-                  ?? panic("Cannot borrow ExampleToken vault from acct storage")
-              self.paymentVault <- mainVault.withdraw(amount: price)
+                // Access the vault of the buyer to pay the sale price of the listing.
+                let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
+                    ?? panic("Cannot borrow ExampleToken vault from acct storage")
+                self.paymentVault <- mainVault.withdraw(amount: price)
 
-              // Access the buyer's NFT collection to store the purchased NFT.
-              let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
-                  ?? panic("ViewResolver does not resolve NFTCollectionData view")
-              self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
-                  ?? panic("Cannot borrow NFT collection receiver from account")
+                // Access the buyer's NFT collection to store the purchased NFT.
+                let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+                    ?? panic("ViewResolver does not resolve NFTCollectionData view")
+                self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
+                    ?? panic("Cannot borrow NFT collection receiver from account")
 
-              // Fetch the commission amt.
-              let commissionAmount = self.listing.getDetails().commissionAmount
+                // Fetch the commission amt.
+                let commissionAmount = self.listing.getDetails().commissionAmount
 
-              if commissionRecipient != nil && commissionAmount != 0.0 {
-                  // Access the capability to receive the commission.
-                  let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
-                          /public/exampleTokenReceiver
-                      )
-                  assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
-                  self.commissionRecipientCap = _commissionRecipientCap
-              } else if commissionAmount == 0.0 {
-                  self.commissionRecipientCap = nil
-              } else {
-                  panic("Commission recipient can not be empty when commission amount is non zero")
-              }
-          }
+                if commissionRecipient != nil && commissionAmount != 0.0 {
+                    // Access the capability to receive the commission.
+                    let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
+                            /public/exampleTokenReceiver
+                        )
+                    assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
+                    self.commissionRecipientCap = _commissionRecipientCap
+                } else if commissionAmount == 0.0 {
+                    self.commissionRecipientCap = nil
+                } else {
+                    panic("Commission recipient can not be empty when commission amount is non zero")
+                }
+            }
 
           execute {
-              // Purchase the NFT
-              let item <- self.listing.purchase(
-                  payment: <-self.paymentVault,
-                  commissionRecipient: self.commissionRecipientCap
-              )
-              // Deposit the NFT in the buyer's collection.
-              self.exampleNFTReceiver.deposit(token: <-item)
-          }
-      }
+                   let sellerCollection = getAccount(storefrontAddress)
+                    .capabilities.get<auth(NonFungibleToken.Withdraw) &ExampleNFT.Collection>(from: ExampleNFT.CollectionPublicPath)
+                    ?? panic("Cannot borrow the seller's collection to withdraw the NFT")
+
+                    // Withdraw the NFT from the seller's collection using listingResourceID
+                    let item <- sellerCollection.withdraw(withdrawID: listingResourceID)
+
+                    // Access the buyer's collection to deposit the NFT
+                    let buyerCollection = self.acct.capabilities.get<&{NonFungibleToken.Receiver}>(ExampleNFT.CollectionPublicPath)
+                      .borrow()
+                      ?? panic("Cannot borrow the buyer's collection receiver capability")
+                        
+                      // Purchase the NFT
+                      let purchasedNFT <- self.listing.purchase(
+                          payment: <-self.paymentVault,
+                          commissionRecipient: self.commissionRecipientCap
+                      )
+                      // Deposit the NFT in the buyer's collection.
+                      self.exampleNFTReceiver.deposit(token: <-purchasedNFT)
+              }
+            }
             `,
             args: (arg, t) => [
               arg(listingResourceID, t.UInt64),
@@ -284,12 +297,12 @@ export default function Home() {
 
   async function listForSale(nftID, salePrice, customID, expiry) {
     const commissionAmount = 0.05
-    const marketplacesAddress = ["0xf8d6e0586b0a20c7"]
+    const marketplacesAddress = ["0xf8d6e0586b0a20c7","0xf3fcd2c1a78f5eee"]
     try {
       const transactionId = await fcl.mutate({
         cadence: `
           import ExampleToken from 0xDeployer
-          import FungibleToken from 0xee82856bf20e2aa6
+          import FungibleToken from 0xFt
           import NonFungibleToken from 0xDeployer
           import ExampleNFT from 0xDeployer
           import MetadataViews from 0xDeployer
@@ -407,7 +420,8 @@ export default function Home() {
   }
 
   async function fetchMarketplaceListings() {
-    const listingAccounts = ["0xf8d6e0586b0a20c7"];
+    const response = await fetch('/api/marketstore');
+    const listingAccounts = await response.json();
     const allListings = [];
   
     for (const account of listingAccounts) {
@@ -452,15 +466,15 @@ export default function Home() {
               arg(listingResourceID, t.UInt64),
             ],
           });
-          // Only include listing details if they are not null (i.e., not purchased)
-          return listingDetails ? { account, listingResourceID, ...listingDetails } : null;
+  
+          // Include `salePrice` in the listing details if available
+          return listingDetails ? { account, listingResourceID, salePrice: listingDetails.salePrice, ...listingDetails } : null;
         })
       );
   
       allListings.push(...accountListings.filter(Boolean));
     }
   
-    // Process metadata fetching for the filtered listings
     const nftIDsByAccount = allListings.reduce((acc, { account, nftID }) => {
       if (!acc[account]) acc[account] = new Set();
       acc[account].add(nftID);
@@ -532,6 +546,7 @@ export default function Home() {
           account,
           nftID: nft.id,
           listingResourceID: listing ? listing.listingResourceID : null,
+          salePrice: listing ? listing.salePrice : null,
           name: nft.name,
           description: nft.description,
           thumbnail: nft.thumbnail.url,
@@ -564,9 +579,7 @@ export default function Home() {
                 acct.storage.save(<-storefront, to: NFTStorefrontV2.StorefrontStoragePath)
 
                 // create a public capability for the Storefront
-                let storefrontPublicCap = acct.capabilities.storage.issue<&{NFTStorefrontV2.StorefrontPublic}>(
-                        NFTStorefrontV2.StorefrontStoragePath
-                    )
+                let storefrontPublicCap = acct.capabilities.storage.issue<&{NFTStorefrontV2.StorefrontPublic}>(NFTStorefrontV2.StorefrontStoragePath)
                 acct.capabilities.publish(storefrontPublicCap, at: NFTStorefrontV2.StorefrontPublicPath)
             }
         }
@@ -577,10 +590,9 @@ export default function Home() {
         authorizations: [fcl.currentUser().authorization],
         limit: 50,
       });
+
       console.log(`Transaction ID: ${transactionId}`);
-  
-      const txStatus = await fcl.tx(transactionId).onceSealed();
-      console.log("Transaction status:", txStatus);
+      addStorefrontAddress(user.addr);
     } catch (error) {
       console.error("Error setting up storefront:", error);
     }
@@ -590,7 +602,7 @@ export default function Home() {
     <div className='bg-[#011E30] flex flex-col min-h-screen'>
       <Head>
         <title>NFT</title>
-        <meta name="description" content="Used by Emerald Academy" />
+        <meta name="description" content="" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className='container mx-auto flex-1 p-5'>
@@ -611,10 +623,11 @@ export default function Home() {
         <div className='text-white py-10'>
         <div className="flex items-center justify-center pb-5">
         <h1 className={styles.sooth}>NFT Marketplace</h1>
-        <div className="">
-        <button onClick={setupExampleTokenVault} className="border rounded-lg py-2 text-sm px-5 border-[#38E8C6] text-blue-900 font-bold bg-[#38E8C6]"> setup vault flow token</button>
         </div>
+        <div className="flex items-center justify-center pb-5">
+        <button onClick={setupExampleTokenVault} className="border rounded-lg py-2 text-sm px-5 border-[#38E8C6] text-blue-900 font-bold bg-[#38E8C6] mb-6"> setup vault flow token</button>
         </div>
+        
         {listings.length > 0 ? (
           <div className="grid grid-cols-3 gap-20 px-5">
             {listings.map((listing, index) => {

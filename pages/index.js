@@ -276,6 +276,7 @@ export default function Home() {
         });
 
         console.log('Transaction Id:', transactionId);
+        window.location.reload();
     } catch (error) {
         console.error('Error buying NFT:', error);
     }
@@ -626,6 +627,7 @@ export default function Home() {
                 >
                   <div className="flex justify-center py-2">
                     {thumbnailUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={thumbnailUrl} width={150} alt="NFT Thumbnail" />
                     )}
                   </div>
@@ -673,16 +675,17 @@ export default function Home() {
                     </div>
                     <p className='text-gray-300 text-md'>{nft.description}</p>
                     <div className='flex justify-center py-2'>
+                      {/*eslint-disable-next-line @next/next/no-img-element*/}                      
                       <img
                         src={`https://gateway.pinata.cloud/ipfs/${nft.thumbnail.url}`}
                         width={150}
                         alt={`${nft.name} thumbnail`}
-                      />
+                      /> 
                     </div>
                     <div className="flex flex-col pt-2">
                       <input
                         type="text"
-                        placeholder="Enter Sale Price"
+                        placeholder="Enter Sale Price(decimal)"
                         onChange={(e) => setSalePrice(e.target.value)}
                         className="px-4 mb-1 py-1 focus:outline-none focus:border-[#38E8C6] focus:border-2 bg-green-100 border rounded-lg border-[#38E8C6]"
                       />

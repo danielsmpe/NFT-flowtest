@@ -7,9 +7,9 @@ async function burnNFT(nftID) {
     const transactionId = await fcl.mutate({
       cadence: `
       import ExampleNFT from 0xDeployer
-      import NonFungibleToken from 0xStandard
-      import MetadataViews from 0xStandard
-      import Burner from 0xStandard
+      import NonFungibleToken from 0xNft
+      import MetadataViews from 0xNft
+      import Burner from 0xNft
       
       transaction(id: UInt64) {
 

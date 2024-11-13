@@ -52,9 +52,11 @@ Visit http://localhost:3000 in your browser.
 
 Click the "Log In" button on the app. A window with several Flow-dev accounts will appear. Select the first account to log in.
 
+After logging in,Click Setup Listing Bucket
+
 # Mint NFTs
 
-After logging in, mint NFTs by running:
+mint NFTs by running:
 
 npm run mint 0xf8d6e0586b0a20c7
 

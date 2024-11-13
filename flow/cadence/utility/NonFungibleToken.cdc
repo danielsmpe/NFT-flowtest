@@ -49,8 +49,8 @@ Collection to complete the transfer.
 
 import "ViewResolver"
 
-/// The main NFT contract. Other NFT contracts will
-/// import and implement the interfaces defined in this contract
+/// The main NFT contract interface. Other NFT contracts will import
+/// and implement this interface as well the interfaces defined in this interface
 ///
 access(all) contract interface NonFungibleToken: ViewResolver {
 
@@ -62,7 +62,7 @@ access(all) contract interface NonFungibleToken: ViewResolver {
 
     /// Event that contracts should emit when the metadata of an NFT is updated
     /// It can only be emitted by calling the `emitNFTUpdated` function
-    /// with an `Updatable` entitled reference to the NFT that was updated
+    /// with an `Update` entitled reference to the NFT that was updated
     /// The entitlement prevents spammers from calling this from other users' collections
     /// because only code within a collection or that has special entitled access
     /// to the collections methods will be able to get the entitled reference
@@ -106,16 +106,28 @@ access(all) contract interface NonFungibleToken: ViewResolver {
 
         /// createEmptyCollection creates an empty Collection that is able to store the NFT
         /// and returns it to the caller so that they can own NFTs
+        ///
         /// @return A an empty collection that can store this NFT
+        ///
         access(all) fun createEmptyCollection(): @{Collection} {
             post {
-                result.getLength() == 0: "The created collection must be empty!"
-                result.isSupportedNFTType(type: self.getType()): "The created collection must support this NFT type"
+                result.getLength() == 0: 
+                    "NonFungibleToken.NFT.createEmptyCollection: Cannot create an empty collection! "
+                    .concat("The created NonFungibleToken Collection has a non-zero length. ")
+                    .concat(" A newly created collection must be empty!")
+                result.isSupportedNFTType(type: self.getType()): 
+                    "NonFungibleToken.NFT.createEmptyCollection: Cannot create an empty collection! "
+                    .concat("The created NonFungibleToken Collection does not support NFTs of type <")
+                    .concat(self.getType().identifier)
+                    .concat(">. The collection must support NFTs of type <")
+                    .concat(self.getType().identifier).concat(">.")
             }
         }
 
         /// Gets all the NFTs that this NFT directly owns
+        ///
         /// @return A dictionary of all subNFTS keyed by type
+        ///
         access(all) view fun getAvailableSubNFTS(): {Type: [UInt64]} {
             return {}
         }
@@ -146,10 +158,19 @@ access(all) contract interface NonFungibleToken: ViewResolver {
 
         /// withdraw removes an NFT from the collection and moves it to the caller
         /// It does not specify whether the ID is UUID or not
+        ///
         /// @param withdrawID: The id of the NFT to withdraw from the collection
+        /// @return @{NFT}: The NFT that was withdrawn
+        ///
         access(Withdraw) fun withdraw(withdrawID: UInt64): @{NFT} {
             post {
-                result.id == withdrawID: "The ID of the withdrawn token must be the same as the requested ID"
+                result.id == withdrawID: 
+                    "NonFungibleToken.Provider.withdraw: Cannot withdraw NFT! "
+                    .concat("The ID of the withdrawn NFT (")
+                    .concat(result.id.toString())
+                    .concat(") must be the same as the requested ID (")
+                    .concat(withdrawID.toString())
+                    .concat(").")
                 emit Withdrawn(type: result.getType().identifier, id: result.id, uuid: result.uuid, from: self.owner?.address, providerUUID: self.uuid)
             }
         }
@@ -184,11 +205,14 @@ access(all) contract interface NonFungibleToken: ViewResolver {
         access(all) view fun borrowNFT(_ id: UInt64): &{NFT}?
     }
 
-    /// Requirement for the concrete resource type
-    /// to be declared in the implementing contract
+    /// Requirement for the concrete resource type in the implementing contract
+    /// to implement this interface. Since this interface inherits from
+    /// all the other necessary interfaces, resources that implement it do not 
+    /// also need to include the other interfaces in their conformance lists
     ///
     access(all) resource interface Collection: Provider, Receiver, CollectionPublic, ViewResolver.ResolverCollection {
 
+        /// Field that contains all the NFTs that the collection owns
         access(all) var ownedNFTs: @{UInt64: {NonFungibleToken.NFT}}
 
         /// deposit takes a NFT as an argument and stores it in the collection
@@ -225,7 +249,12 @@ access(all) contract interface NonFungibleToken: ViewResolver {
         access(all) view fun borrowNFT(_ id: UInt64): &{NonFungibleToken.NFT}? {
             post {
                 (result == nil) || (result?.id == id): 
-                    "Cannot borrow NFT reference: The ID of the returned reference does not match the ID that was specified"
+                    "NonFungibleToken.Collection.borrowNFT: Cannot borrow NFT reference! "
+                    .concat("The ID of the returned reference (")
+                    .concat(result!.id.toString())
+                    .concat(") does not match the ID that was specified (")
+                    .concat(id.toString())
+                    .concat(")")
             }
         }
 
@@ -234,8 +263,17 @@ access(all) contract interface NonFungibleToken: ViewResolver {
         /// @return A an empty collection of the same type
         access(all) fun createEmptyCollection(): @{Collection} {
             post {
-                result.getType() == self.getType(): "The created collection does not have the same type as this collection"
-                result.getLength() == 0: "The created collection must be empty!"
+                result.getType() == self.getType(): 
+                    "NonFungibleToken.Collection.createEmptyCollection: Cannot create empty collection! "
+                    .concat("The created collection type <")
+                    .concat(result.getType().identifier)
+                    .concat("> does not have the same type as the collection that was used to create it <")
+                    .concat(self.getType().identifier)
+                    .concat(">.")
+                result.getLength() == 0:
+                    "NonFungibleToken.Collection.createEmptyCollection: Cannot create empty collection! "
+                    .concat("The created collection has a non-zero length.")
+                    .concat(" A newly created collection must be empty!")
             }
         }
     }
@@ -246,7 +284,10 @@ access(all) contract interface NonFungibleToken: ViewResolver {
     /// @return An array of NFT Types that the implementing contract defines.
     access(all) fun createEmptyCollection(nftType: Type): @{NonFungibleToken.Collection} {
         post {
-            result.getIDs().length == 0: "The created collection must be empty!"
+            result.getIDs().length == 0: 
+                "NonFungibleToken.createEmptyCollection: Cannot create empty collection! "
+                .concat("The created collection has a non-zero length. ")
+                .concat("A newly created collection must be empty!")
         }
     }
 }

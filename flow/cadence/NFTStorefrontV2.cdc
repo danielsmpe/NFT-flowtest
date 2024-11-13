@@ -1,6 +1,6 @@
-import "FungibleToken"
-import "NonFungibleToken"
-import "Burner"
+import FungibleToken from "./utility/FungibleToken.cdc"
+import NonFungibleToken from "./utility/NonFungibleToken.cdc"
+import Burner from "./utility/Burner.cdc"
 
 /// NFTStorefrontV2
 ///

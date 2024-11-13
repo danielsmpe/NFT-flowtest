@@ -638,7 +638,7 @@ export default function Home() {
                   <div className="flex justify-center items-center">
                     <button
                       onClick={() => buyNFT(listing.listingResourceID, listing.account)}
-                      className="border rounded-lg py-2 text-sm px-5 border-[#38E8C6] text-blue-900 font-bold bg-[#38E8C6]"
+                      className="border rounded-lg py-2 text-sm px-5 border-[#38E8C6] text-blue-900 font-bold bg-[#38E8C6] mt-2"
                     >
                       Buy
                     </button>

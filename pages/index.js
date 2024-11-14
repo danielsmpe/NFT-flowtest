@@ -206,76 +206,75 @@ export default function Home() {
             import NFTStorefrontV2 from 0xDeployer
             import FungibleToken from 0xFt
 
-           transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
+            transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
 
-            let paymentVault: @{FungibleToken.Vault}
-            let exampleNFTReceiver: &{NonFungibleToken.Receiver}
-            let storefront: &{NFTStorefrontV2.StorefrontPublic}
-            let listing: &{NFTStorefrontV2.ListingPublic}
-            var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
+              let paymentVault: @{FungibleToken.Vault}
+              let exampleNFTReceiver: &{NonFungibleToken.Receiver}
+              let storefront: &{NFTStorefrontV2.StorefrontPublic}
+              let listing: &{NFTStorefrontV2.ListingPublic}
+              var commissionRecipientCap: Capability<&{FungibleToken.Receiver}>?
 
-            prepare(acct: auth(BorrowValue) &Account) {
-                self.commissionRecipientCap = nil
-                // Access the storefront public resource of the seller to purchase the listing.
-                self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
-                        NFTStorefrontV2.StorefrontPublicPath
-                    ) ?? panic("Could not borrow Storefront from provided address")
+              prepare(acct: auth(BorrowValue) &Account) {
+                  self.commissionRecipientCap = nil
+                  // Access the storefront public resource of the seller to purchase the listing.
+                  self.storefront = getAccount(storefrontAddress).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
+                          NFTStorefrontV2.StorefrontPublicPath
+                      ) ?? panic("Could not borrow Storefront from provided address")
 
-                // Borrow the listing
-                self.listing = self.storefront.borrowListing(listingResourceID: listingResourceID)
-                    ?? panic("No Offer with that ID in Storefront")
-                let price = self.listing.getDetails().salePrice
+                  // Borrow the listing
+                  self.listing = self.storefront.borrowListing(listingResourceID: listingResourceID)
+                      ?? panic("No Offer with that ID in Storefront")
+                  let price = self.listing.getDetails().salePrice
 
-                // Access the vault of the buyer to pay the sale price of the listing.
-                let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
-                    ?? panic("Cannot borrow ExampleToken vault from acct storage")
-                self.paymentVault <- mainVault.withdraw(amount: price)
+                  // Access the vault of the buyer to pay the sale price of the listing.
+                  let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
+                      ?? panic("Cannot borrow ExampleToken vault from acct storage")
+                  self.paymentVault <- mainVault.withdraw(amount: price)
 
-                // Access the buyer's NFT collection to store the purchased NFT.
-                let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
-                    ?? panic("ViewResolver does not resolve NFTCollectionData view")
-                self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
-                    ?? panic("Cannot borrow NFT collection receiver from account")
+                  // Access the buyer's NFT collection to store the purchased NFT.
+                  let collectionData = ExampleNFT.resolveContractView(resourceType: nil, viewType: Type<MetadataViews.NFTCollectionData>()) as! MetadataViews.NFTCollectionData?
+                      ?? panic("ViewResolver does not resolve NFTCollectionData view")
+                  self.exampleNFTReceiver = acct.capabilities.borrow<&{NonFungibleToken.Receiver}>(collectionData.publicPath)
+                      ?? panic("Cannot borrow NFT collection receiver from account")
 
-                // Fetch the commission amt.
-                let commissionAmount = self.listing.getDetails().commissionAmount
+                  // Fetch the commission amt.
+                  let commissionAmount = self.listing.getDetails().commissionAmount
 
-                if commissionRecipient != nil && commissionAmount != 0.0 {
-                    // Access the capability to receive the commission.
-                    let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
-                            /public/exampleTokenReceiver
-                        )
-                    assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
-                    self.commissionRecipientCap = _commissionRecipientCap
-                } else if commissionAmount == 0.0 {
-                    self.commissionRecipientCap = nil
-                } else {
-                    panic("Commission recipient can not be empty when commission amount is non zero")
-                }
-            }
+                  if commissionRecipient != nil && commissionAmount != 0.0 {
+                      // Access the capability to receive the commission.
+                      let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
+                              /public/exampleTokenReceiver
+                          )
+                      assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
+                      self.commissionRecipientCap = _commissionRecipientCap
+                  } else if commissionAmount == 0.0 {
+                      self.commissionRecipientCap = nil
+                  } else {
+                      panic("Commission recipient can not be empty when commission amount is non zero")
+                  }
+                  
+                  let sellerCollection = getAccount(storefrontAddress)
+                        .capabilities.get<&ExampleNFT.Collection>(ExampleNFT.CollectionPublicPath)
+                        .borrow()
+                        ?? panic("Cannot borrow the seller's collection to withdraw the NFT")
 
-          execute {
-                   let sellerCollection = getAccount(storefrontAddress)
-                    .capabilities.get<auth(NonFungibleToken.Withdraw) &ExampleNFT.Collection>(from: ExampleNFT.CollectionPublicPath)
-                    ?? panic("Cannot borrow the seller's collection to withdraw the NFT")
-
-                    // Withdraw the NFT from the seller's collection using listingResourceID
-                    let item <- sellerCollection.withdraw(withdrawID: listingResourceID)
-
-                    // Access the buyer's collection to deposit the NFT
-                    let buyerCollection = self.acct.capabilities.get<&{NonFungibleToken.Receiver}>(ExampleNFT.CollectionPublicPath)
-                      .borrow()
-                      ?? panic("Cannot borrow the buyer's collection receiver capability")
-                        
-                      // Purchase the NFT
-                      let purchasedNFT <- self.listing.purchase(
-                          payment: <-self.paymentVault,
-                          commissionRecipient: self.commissionRecipientCap
-                      )
-                      // Deposit the NFT in the buyer's collection.
-                      self.exampleNFTReceiver.deposit(token: <-purchasedNFT)
+                  // Access the buyer's collection to deposit the NFT
+                  let buyerCollection = acct.capabilities.get<&{NonFungibleToken.Receiver}>(ExampleNFT.CollectionPublicPath)
+                        .borrow()
+                        ?? panic("Cannot borrow the buyer's collection receiver capability")
               }
-            }
+                execute {                      
+                          // Withdraw the NFT from the seller's collection using listingResourceID
+
+                          // Purchase the NFT
+                          let purchasedNFT <- self.listing.purchase(
+                              payment: <-self.paymentVault,
+                              commissionRecipient: self.commissionRecipientCap
+                          )
+                          // Deposit the NFT in the buyer's collection.
+                          self.exampleNFTReceiver.deposit(token: <-purchasedNFT)
+                    }
+                  }
             `,
             args: (arg, t) => [
               arg(listingResourceID, t.UInt64),

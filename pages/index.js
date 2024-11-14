@@ -50,17 +50,18 @@ export default function Home() {
           import FungibleToken from 0xFt
           import NonFungibleToken from 0xNft
           import MetadataViews from 0xNft
+          import FlowToken from 0x0ae53cb6e3f42a79
 
           transaction {
             prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
                 // Check if the vault already exists to avoid overwriting it
-                if acct.storage.borrow<&ExampleToken.Vault>(from: /storage/exampleTokenVault) == nil {
+                if acct.storage.borrow<&FlowToken.Vault>(from: /storage/flowTokenVault) == nil {
                     // Create and store the ExampleToken vault
-                    let vault <- ExampleToken.createEmptyVault(vaultType: Type<@ExampleToken.Vault>())
-                    acct.storage.save(<-vault, to: /storage/exampleTokenVault)
+                    let vault <- FlowToken.createEmptyVault(vaultType: Type<@FlowToken.Vault>())
+                    acct.storage.save(<-vault, to: /storage/flowTokenVault)
 
-                    let receiver = acct.capabilities.storage.issue<&{FungibleToken.Receiver}>(/storage/exampleTokenVault)
-                    acct.capabilities.publish(receiver, at: /public/exampleTokenReceiver)
+                    let receiver = acct.capabilities.storage.issue<&{FungibleToken.Receiver}>(/storage/flowTokenVault)
+                    acct.capabilities.publish(receiver, at: /public/flowTokenReceiver)
                 }
                 if acct.storage.borrow<&ExampleNFT.Collection>(from: ExampleNFT.CollectionStoragePath) == nil {
                   // Create a Collection resource and save it to storage
@@ -205,6 +206,7 @@ export default function Home() {
             import NonFungibleToken from 0xStandard
             import NFTStorefrontV2 from 0xDeployer
             import FungibleToken from 0xFt
+            import FlowToken from 0x0ae53cb6e3f42a79
 
             transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
 
@@ -227,8 +229,8 @@ export default function Home() {
                   let price = self.listing.getDetails().salePrice
 
                   // Access the vault of the buyer to pay the sale price of the listing.
-                  let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &ExampleToken.Vault>(from: /storage/exampleTokenVault)
-                      ?? panic("Cannot borrow ExampleToken vault from acct storage")
+                  let mainVault = acct.storage.borrow<auth(FungibleToken.Withdraw) &FlowToken.Vault>(from: /storage/flowTokenVault)
+                      ?? panic("Cannot borrow FlowToken vault from acct storage")
                   self.paymentVault <- mainVault.withdraw(amount: price)
 
                   // Access the buyer's NFT collection to store the purchased NFT.
@@ -243,7 +245,7 @@ export default function Home() {
                   if commissionRecipient != nil && commissionAmount != 0.0 {
                       // Access the capability to receive the commission.
                       let _commissionRecipientCap = getAccount(commissionRecipient!).capabilities.get<&{FungibleToken.Receiver}>(
-                              /public/exampleTokenReceiver
+                              /public/flowTokenReceiver
                           )
                       assert(_commissionRecipientCap.check(), message: "Commission Recipient doesn't have exampletoken receiving capability")
                       self.commissionRecipientCap = _commissionRecipientCap
@@ -306,6 +308,7 @@ export default function Home() {
           import ExampleNFT from 0xDeployer
           import MetadataViews from 0xDeployer
           import NFTStorefrontV2 from 0xDeployer
+          import FlowToken from 0x0ae53cb6e3f42a79
   
           transaction(
             saleItemID: UInt64,
@@ -329,7 +332,7 @@ export default function Home() {
                   ?? panic("ViewResolver does not resolve NFTCollectionData view")
 
               // Receiver for the sale cut.
-              self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
+              self.tokenReceiver = acct.capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
               assert(self.tokenReceiver.borrow() != nil, message: "Missing or mis-typed ExampleToken receiver")
 
               self.exampleNFTProvider = acct.capabilities.storage.issue<auth(NonFungibleToken.Withdraw) &{NonFungibleToken.Collection}>(
@@ -373,7 +376,7 @@ export default function Home() {
 
               for marketplace in marketplacesAddress {
                   self.marketplacesCapability.append(
-                      getAccount(marketplace).capabilities.get<&{FungibleToken.Receiver}>(/public/exampleTokenReceiver)
+                      getAccount(marketplace).capabilities.get<&{FungibleToken.Receiver}>(/public/flowTokenReceiver)
                   )
               }
           }
@@ -384,7 +387,7 @@ export default function Home() {
                   nftProviderCapability: self.exampleNFTProvider,
                   nftType: Type<@ExampleNFT.NFT>(),
                   nftID: saleItemID,
-                  salePaymentVaultType: Type<@ExampleToken.Vault>(),
+                  salePaymentVaultType: Type<@FlowToken.Vault>(),
                   saleCuts: self.saleCuts,
                   marketplacesCapability: self.marketplacesCapability.length == 0 ? nil : self.marketplacesCapability,
                   customID: customID,

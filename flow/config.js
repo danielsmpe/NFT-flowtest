@@ -2,7 +2,6 @@ const fcl = require("@onflow/fcl");
 
 fcl.config({
   "app.detail.title": "NFT",
-  "app.detail.icon": "https://i.imgur.com/ux3lYB9.png", 
   "accessNode.api": process.env.NEXT_PUBLIC_ACCESS_NODE,
   "discovery.wallet": process.env.NEXT_PUBLIC_WALLET,
   "discovery.authn.include": ["0x82ec283f88a62e65",0x9d2e44203cb13051],

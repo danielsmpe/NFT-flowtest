@@ -288,7 +288,7 @@ export default function Home() {
         });
 
         console.log('Transaction Id:', transactionId);
-        // window.location.reload();
+        window.location.reload();
     } catch (error) {
         console.error('Error buying NFT:', error);
     }

@@ -1,20 +1,15 @@
-# Flow NFT Web App
+# Flow-Based NFT Marketplace DApp
 
-This project is a simple web application that allows users to mint, view, list for sale, and buy NFTs on the Flow blockchain. The app uses Flow's local emulator and development wallet for testing.
+DApp ini memungkinkan pengguna untuk membuat, menghapus, menjual, dan membeli NFT (Non-Fungible Token) di blockchain Flow.
 
 ## Features
 
-- **Mint NFTs**: Create NFTs and assign them to a user account.
-- **View NFTs**: See the NFTs associated with a user account.
-- **Sell NFTs**: List NFTs for sale in the marketplace.
-- **Buy NFTs**: Purchase listed NFTs from the marketplace.
+- **Mint NFT**: Creates an NFT and adds it to the user's account.
+- **Burn NFT**: Deletes an NFT.
+- **Jual NFT**: Lists an NFT for sale on the marketplace.
+- **Beli NFT**: Purchases an NFT listed on the marketplace.
 
-## Prerequisites
-
-Ensure the following are installed on your system:
-
-- Flow CLI
-- npm
+  ![image](https://github.com/user-attachments/assets/9d418f24-97f9-457c-9b3d-f3a8b93654e4)
 
 ## Setup Instructions
 
@@ -27,55 +22,12 @@ Ensure the following are installed on your system:
    ```bash
    npm install
    ```
-3. **In the first terminal window, run:**
+3. **In the terminal, run:**
    ```bash
    npm run dev
    This will start the web app at http://localhost:3000.
-   ```
-4. **In a second terminal window, run:**
-   ```bash
-   flow emulator start -v
-   ```
-5. **Deploy the Contract and Start the Wallet**
-   ```bash
-   flow project deploy
-   flow dev-wallet
    ```
 
 ## Open the App
 
 Visit http://localhost:3000 in your browser.
-
-## Usage Instructions
-
-# Log In
-
-Click the "Log In" button on the app. A window with several Flow-dev accounts will appear. Select the first account to log in.
-
-After logging in,Click Setup Listing Bucket
-
-# Mint NFTs
-
-mint NFTs by running:
-
-npm run mint 0xf8d6e0586b0a20c7
-
-# Burn NFTs
-
-npm run burn NFTid
-
-
-# View NFTs
-
-Log in with account 0xf8d6e0586b0a20c7 and click "Get NFTs" in the app.
-
-# Sell an NFT
-
-Select an NFT and click "Add to Listing" to list it for sale.
-
-# Buy an NFT
-
-To buy a listed NFT, browse the marketplace, select an NFT, and click "Buy".
-
-Notes
-Make sure the Flow emulator and dev wallet are running before interacting with the app.

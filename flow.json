@@ -242,9 +242,15 @@
 			"key": "c0bb3432e00a0326e0f8e542f3ced1e87d0b9dce918f94ba448a2c11d6f6330b"
 		},
 		"testnet-account": {
-			"address": "dfdbb6d33410b860",
-			"key": "d26cc9252b48cbf98adbf0e187934f7c7512c471781f3f888eaa8f88a1bcd9f8"
-		}
+			"address": "0x13136e2bf21809a2",
+			"key": {
+			  "type": "hex",
+			  "index": 0,
+			  "signatureAlgorithm": "ECDSA_P256",
+			  "hashAlgorithm": "SHA3_256",
+			  "privateKey": "b1bdcad2cd0989a03a01dc30cfa0ac81b32eece7b1be6d3091d593483e20c8bc"
+			}
+		  }
 	},
 	"deployments": {
 		"emulator": {
@@ -266,8 +272,8 @@
 			"testnet-account": [
 				"FungibleTokenMetadataViews",
 				"FungibleToken",
+				"ExampleToken",
 				"ExampleNFT",
-				"NFTStorefront",
 				"NFTStorefrontV2"
 			]
 		}

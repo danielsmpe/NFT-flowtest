@@ -45,12 +45,11 @@ export default function Home() {
     try {
       const transactionId = await fcl.mutate({
         cadence: `
-          import ExampleToken from 0xDeployer
           import ExampleNFT from 0xDeployer
           import FungibleToken from 0xFt
           import NonFungibleToken from 0xNft
           import MetadataViews from 0xNft
-          import FlowToken from 0x0ae53cb6e3f42a79
+          import FlowToken from 0xFlowToken
 
           transaction {
             prepare(acct: auth(BorrowValue, IssueStorageCapabilityController, PublishCapability, SaveValue) &Account) {
@@ -91,7 +90,7 @@ export default function Home() {
     const result = await fcl.query({
       cadence: `
       import ExampleNFT from 0xDeployer
-      import MetadataViews from 0xStandard
+      import MetadataViews from 0xNft
     
       access(all) fun main(address: Address): [NFT] {
         let collection = getAccount(address)
@@ -151,7 +150,7 @@ export default function Home() {
 
     const listingResourceIDs = await fcl.query({
       cadence: `
-      import NFTStorefrontV2 from 0xDeployer
+      import NFTStorefrontV2 from 0xStorefront
 
       access(all) fun main(account: Address): [UInt64] {
           return getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
@@ -167,7 +166,7 @@ export default function Home() {
       listingResourceIDs.map(async (listingResourceID) => {
         const listingDetails = await fcl.query({
           cadence: `
-          import NFTStorefrontV2 from 0xDeployer
+          import NFTStorefrontV2 from 0xStorefront
 
           access(all) fun main(account: Address, listingResourceID: UInt64): NFTStorefrontV2.ListingDetails {
               let storefrontRef = getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
@@ -195,18 +194,17 @@ export default function Home() {
   }
 
   async function buyNFT(listingResourceID, storefrontAddress) {
-    const commissionRecipient = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS
+    const commissionRecipient = storefrontAddress
 
     try {
         const transactionId = await fcl.mutate({
             cadence: `
             import ExampleNFT from 0xStandard
-            import MetadataViews from 0xStandard
-            import ExampleToken from 0xStandard
-            import NonFungibleToken from 0xStandard
-            import NFTStorefrontV2 from 0xDeployer
+            import MetadataViews from 0xNft
+            import NonFungibleToken from 0xNft
+            import NFTStorefrontV2 from 0xStorefront
             import FungibleToken from 0xFt
-            import FlowToken from 0x0ae53cb6e3f42a79
+            import FlowToken from 0xFlowToken
 
             transaction(listingResourceID: UInt64, storefrontAddress: Address, commissionRecipient: Address?) {
 
@@ -290,7 +288,7 @@ export default function Home() {
         });
 
         console.log('Transaction Id:', transactionId);
-        window.location.reload();
+        // window.location.reload();
     } catch (error) {
         console.error('Error buying NFT:', error);
     }
@@ -302,13 +300,12 @@ export default function Home() {
     try {
       const transactionId = await fcl.mutate({
         cadence: `
-          import ExampleToken from 0xDeployer
           import FungibleToken from 0xFt
-          import NonFungibleToken from 0xDeployer
+          import NonFungibleToken from 0xNft
           import ExampleNFT from 0xDeployer
-          import MetadataViews from 0xDeployer
-          import NFTStorefrontV2 from 0xDeployer
-          import FlowToken from 0x0ae53cb6e3f42a79
+          import MetadataViews from 0xNft
+          import NFTStorefrontV2 from 0xStorefront
+          import FlowToken from 0xFlowToken
   
           transaction(
             saleItemID: UInt64,
@@ -429,7 +426,7 @@ export default function Home() {
     for (const account of listingAccounts) {
       const listingResourceIDs = await fcl.query({
         cadence: `
-        import NFTStorefrontV2 from 0xDeployer
+        import NFTStorefrontV2 from 0xStorefront
   
         access(all) fun main(account: Address): [UInt64] {
           return getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
@@ -446,7 +443,7 @@ export default function Home() {
         listingResourceIDs.map(async (listingResourceID) => {
           const listingDetails = await fcl.query({
             cadence: `
-            import NFTStorefrontV2 from 0xDeployer
+            import NFTStorefrontV2 from 0xStorefront
   
             access(all) fun main(account: Address, listingResourceID: UInt64): NFTStorefrontV2.ListingDetails? {
               let storefrontRef = getAccount(account).capabilities.borrow<&{NFTStorefrontV2.StorefrontPublic}>(
@@ -488,7 +485,7 @@ export default function Home() {
       const nftMetadataList = await fcl.query({
         cadence: `
         import ExampleNFT from 0xDeployer
-        import MetadataViews from 0xStandard
+        import MetadataViews from 0xNft
   
         access(all) fun main(address: Address): [NFT] {
           let collection = getAccount(address)
@@ -565,7 +562,7 @@ export default function Home() {
     try {
       const transactionId = await fcl.mutate({
         cadence: `
-        import NFTStorefrontV2 from 0xDeployer
+        import NFTStorefrontV2 from 0xStorefront
         import ExampleNFT from 0xDeployer
 
         transaction {
